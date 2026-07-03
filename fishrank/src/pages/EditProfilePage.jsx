@@ -4,10 +4,10 @@ import { FiSave } from 'react-icons/fi';
 import { Button, Input, Select, Textarea, Toast } from '../components/common';
 import { getAllTitles } from '../constants/titles';
 import { useAuth } from '../context/AuthContext';
-import { storageService } from '../services/storageService';
+import { imageService } from '../services/imageService';
 
 export const EditProfilePage = () => {
-  const { user, userProfile, updateProfile } = useAuth();
+  const { userProfile, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     displayName: userProfile?.displayName || '',
@@ -42,7 +42,7 @@ export const EditProfilePage = () => {
     try {
       setLoading(true);
       setError('');
-      const photoURL = photoFile ? await storageService.uploadProfilePhoto(photoFile, user.uid) : preview;
+      const photoURL = photoFile ? await imageService.uploadImage(photoFile) : preview;
       await updateProfile({ ...formData, photoURL });
       navigate('/profile');
     } catch (err) {

@@ -1,6 +1,6 @@
 # FishRank
 
-FishRank é uma rede social para pescadores com feed de capturas, ranking, conquistas, títulos equipáveis e perfis públicos. O projeto usa React 19, Vite, TailwindCSS, Firebase Authentication, Firestore e Firebase Storage.
+FishRank é uma rede social para pescadores com feed de capturas, ranking, conquistas, títulos equipáveis e perfis públicos. O projeto usa React 19, Vite, TailwindCSS, Firebase Authentication, Firestore e Cloudinary para imagens.
 
 ## Como instalar
 
@@ -13,17 +13,17 @@ npm install
 1. Crie um projeto no Firebase Console.
 2. Ative Authentication com os provedores Google e Email/Senha.
 3. Crie um banco Firestore.
-4. Ative Firebase Storage.
-5. Copie `.env.example` para `.env.local`.
-6. Preencha as variáveis:
+4. Copie `.env.example` para `.env.local`.
+5. Preencha as variáveis:
 
 ```env
 VITE_FIREBASE_API_KEY=...
 VITE_FIREBASE_AUTH_DOMAIN=...
 VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_STORAGE_BUCKET=...
 VITE_FIREBASE_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_APP_ID=...
+VITE_CLOUDINARY_CLOUD_NAME=hfq3jtuh
+VITE_CLOUDINARY_UPLOAD_PRESET=fishrank
 ```
 
 As chaves ficam centralizadas em `src/firebase/config.js`. Para trocar as credenciais, altere apenas o `.env.local` em desenvolvimento ou as Environment Variables na Vercel.
@@ -54,7 +54,7 @@ npm run build
 2. Configure o framework como Vite.
 3. Use `npm run build` como build command.
 4. Use `dist` como output directory.
-5. Cadastre as variáveis `VITE_FIREBASE_*` no painel do projeto.
+5. Cadastre as variáveis `VITE_FIREBASE_*` e `VITE_CLOUDINARY_*` no painel do projeto.
 6. Faça o deploy.
 
 ## Estrutura do projeto
@@ -66,7 +66,7 @@ src/
   context/             AuthContext
   firebase/            Inicialização do Firebase
   pages/               Telas da aplicação
-  services/            Auth, usuários, capturas, storage e progressão
+  services/            Auth, usuários, capturas, imagens e progressão
   utils/               Formatadores e helpers
 ```
 
@@ -74,7 +74,7 @@ src/
 
 - Login Google, login email/senha, cadastro e logout.
 - Feed de capturas com foto, usuário, título equipado, peixe, peso, comprimento, cidade, data, curtir e compartilhar.
-- Nova captura com upload para Firebase Storage e registro no Firestore.
+- Nova captura com upload para Cloudinary e registro no Firestore.
 - Perfil com foto, cidade, bio, estatísticas, medalhas, títulos e lista de capturas.
 - Edição de perfil com foto, nome, cidade, bio e título equipado.
 - Ranking por quantidade de peixes, peso total, maior peixe, espécies e medalhas.

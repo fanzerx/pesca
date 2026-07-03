@@ -5,9 +5,9 @@ import { Button, Input, Select, Textarea, Toast } from '../components/common';
 import { FISH_SPECIES, STATES } from '../constants';
 import { useAuth } from '../context/AuthContext';
 import { captureService } from '../services/captureService';
+import { imageService } from '../services/imageService';
 import { postService } from '../services/postService';
 import { progressionService } from '../services/progressionService';
-import { storageService } from '../services/storageService';
 
 export const NewCapturePage = () => {
   const [formData, setFormData] = useState({
@@ -41,7 +41,6 @@ export const NewCapturePage = () => {
   };
 
   const validate = () => {
-    if (!photoFile) return 'Envie uma foto do peixe.';
     if (!formData.fishName.trim()) return 'Informe o nome do peixe.';
     if (!formData.species) return 'Escolha a espécie.';
     if (!formData.weight || Number(formData.weight) <= 0) return 'Informe um peso válido.';
@@ -63,7 +62,7 @@ export const NewCapturePage = () => {
 
     try {
       setLoading(true);
-      const photoURL = await storageService.uploadCapturePhoto(photoFile, user.uid);
+      const photoURL = photoFile ? await imageService.uploadImage(photoFile) : '';
       const createdAt = new Date();
       const capture = await captureService.createCapture(user.uid, {
         ...formData,
