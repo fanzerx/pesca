@@ -32,8 +32,10 @@ export const userService = {
         largestFish: 0,
         totalSpecies: 0,
         totalLocations: 0,
+        totalLikes: 0,
         unlockedTitles: ['fishing_beginner'],
         unlockedAchievements: [],
+        achievementUnlockedAt: {},
         likes: [],
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -152,8 +154,13 @@ export const userService = {
       const profile = await userService.getUserProfile(uid);
       const unlockedAchievements = profile?.unlockedAchievements || [];
       if (!unlockedAchievements.includes(achievementId)) {
+        const achievementUnlockedAt = profile?.achievementUnlockedAt || {};
         await userService.updateUserProfile(uid, {
           unlockedAchievements: [...unlockedAchievements, achievementId],
+          achievementUnlockedAt: {
+            ...achievementUnlockedAt,
+            [achievementId]: achievementUnlockedAt[achievementId] || new Date(),
+          },
         });
       }
     } catch (error) {

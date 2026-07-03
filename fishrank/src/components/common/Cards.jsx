@@ -1,5 +1,6 @@
 import { FiAward, FiCheck, FiLock, FiMapPin } from 'react-icons/fi';
-import { getTitleById } from '../../constants/titles';
+import { ACHIEVEMENT_CATEGORY_LABELS } from '../../constants/achievements';
+import { getTitleById, TITLE_CATEGORIES } from '../../constants/titles';
 
 const avatar = (user, size = 'h-12 w-12') =>
   user?.photoURL ? (
@@ -10,29 +11,59 @@ const avatar = (user, size = 'h-12 w-12') =>
     </div>
   );
 
-export const AchievementCard = ({ achievement, unlocked = false }) => (
-  <article
-    className={`rounded-lg border p-4 transition hover:-translate-y-0.5 ${
-      unlocked
-        ? 'border-accent/70 bg-white shadow-md'
-        : 'border-gray-200 bg-gray-100 text-gray-500'
-    }`}
-  >
-    <div className="flex items-start gap-3">
-      <div className={`text-3xl ${unlocked ? '' : 'grayscale'}`}>{achievement.icon}</div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="font-bold text-gray-900">{achievement.name}</h3>
-          {unlocked ? <FiCheck className="text-green-600" /> : <FiLock className="text-gray-400" />}
+const formatUnlockedAt = (value) => {
+  if (!value) return 'Ainda não desbloqueada';
+  const date = value?.toDate ? value.toDate() : new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Data indisponível';
+  return date.toLocaleDateString('pt-BR');
+};
+
+export const AchievementCard = ({ achievement, unlocked = false, unlockedAt = null }) => {
+  const category = ACHIEVEMENT_CATEGORY_LABELS[achievement.category] || achievement.category;
+
+  return (
+    <article
+      className={`rounded-lg border p-4 transition hover:-translate-y-0.5 ${
+        unlocked
+          ? 'border-accent/70 bg-white shadow-md'
+          : 'border-gray-200 bg-gray-100 text-gray-500'
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className={`text-3xl ${unlocked ? '' : 'grayscale'}`}>{achievement.icon}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-bold text-gray-900">{achievement.name}</h3>
+            {unlocked ? <FiCheck className="shrink-0 text-green-600" /> : <FiLock className="shrink-0 text-gray-400" />}
+          </div>
+          <p className="mt-1 text-sm text-gray-600">{achievement.description}</p>
+          <dl className="mt-3 space-y-1 text-xs">
+            <div>
+              <dt className="font-semibold text-gray-500">Categoria</dt>
+              <dd className="text-gray-700">{category}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-gray-500">Condição</dt>
+              <dd className="text-gray-700">{achievement.condition}</dd>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <div>
+                <dt className="font-semibold text-gray-500">Status</dt>
+                <dd className={unlocked ? 'font-semibold text-green-700' : 'font-semibold text-gray-500'}>
+                  {unlocked ? 'Desbloqueada' : 'Bloqueada'}
+                </dd>
+              </div>
+              <div className="text-right">
+                <dt className="font-semibold text-gray-500">Desbloqueio</dt>
+                <dd className="text-gray-700">{formatUnlockedAt(unlockedAt)}</dd>
+              </div>
+            </div>
+          </dl>
         </div>
-        <p className="mt-1 text-sm text-gray-600">{achievement.description}</p>
-        <p className={`mt-3 text-xs font-semibold ${unlocked ? 'text-green-700' : 'text-gray-500'}`}>
-          {unlocked ? 'Desbloqueada' : 'Bloqueada'}
-        </p>
       </div>
-    </div>
-  </article>
-);
+    </article>
+  );
+};
 
 export const TitleCard = ({ title, unlocked = false, equipped = false, onEquip = null }) => (
   <article
@@ -50,7 +81,9 @@ export const TitleCard = ({ title, unlocked = false, equipped = false, onEquip =
     </div>
     <h3 className="mt-3 font-bold text-gray-900">{title.name}</h3>
     <p className="mt-1 text-sm text-gray-600">{title.description}</p>
-    <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-secondary">{title.type}</p>
+    <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-secondary">
+      {TITLE_CATEGORIES[title.type] || title.type}
+    </p>
     {unlocked && !equipped && (
       <button
         type="button"
