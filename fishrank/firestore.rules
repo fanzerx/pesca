@@ -14,10 +14,16 @@ service cloud.firestore {
       return signedIn() && request.resource.data.uid == request.auth.uid;
     }
 
+    function ownsPost(postId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/posts/$(postId)).data.uid == request.auth.uid;
+    }
+
     match /posts/{postId} {
       allow read: if signedIn();
       allow create: if ownsIncoming();
-      allow update: if ownsResource()
+      allow update: if (ownsResource()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['description', 'location', 'city', 'state', 'updatedAt']))
         || (signedIn()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentsCount'])
           && request.resource.data.commentsCount is int
@@ -32,7 +38,8 @@ service cloud.firestore {
     match /comments/{commentId} {
       allow read: if signedIn();
       allow create: if ownsIncoming();
-      allow update, delete: if ownsResource();
+      allow update: if ownsResource();
+      allow delete: if ownsResource() || ownsPost(resource.data.postId);
     }
 
     match /users/{userId} {

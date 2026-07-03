@@ -12,10 +12,13 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const POSTS_COLLECTION = 'posts';
+const COMMENTS_COLLECTION = 'comments';
+const DELETE_BATCH_SIZE = 450;
 
 const mapPost = (postDoc) => ({
   id: postDoc.id,
@@ -103,7 +106,10 @@ export const postService = {
     try {
       const postRef = doc(db, POSTS_COLLECTION, postId);
       await updateDoc(postRef, {
-        ...data,
+        description: data.description || '',
+        location: data.location || '',
+        city: data.city || '',
+        state: data.state || '',
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
@@ -113,6 +119,17 @@ export const postService = {
 
   deletePost: async (postId) => {
     try {
+      const commentsQuery = query(collection(db, COMMENTS_COLLECTION), where('postId', '==', postId));
+      const commentsSnapshot = await getDocs(commentsQuery);
+
+      for (let index = 0; index < commentsSnapshot.docs.length; index += DELETE_BATCH_SIZE) {
+        const batch = writeBatch(db);
+        commentsSnapshot.docs.slice(index, index + DELETE_BATCH_SIZE).forEach((commentDoc) => {
+          batch.delete(commentDoc.ref);
+        });
+        await batch.commit();
+      }
+
       await deleteDoc(doc(db, POSTS_COLLECTION, postId));
     } catch (error) {
       throw new Error(error.message);

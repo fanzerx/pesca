@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiClock, FiMapPin, FiMessageCircle, FiSend } from 'react-icons/fi';
+import { FiClock, FiEdit2, FiMapPin, FiMessageCircle, FiSend, FiTrash2 } from 'react-icons/fi';
+import { Button, Input, Modal, Textarea } from '../common';
+import { STATES } from '../../constants';
 import { getTitleById } from '../../constants/titles';
 import { useAuth } from '../../context/AuthContext';
 import { commentService } from '../../services/commentService';
+import { postService } from '../../services/postService';
 import { formatDateWithTime, formatLength, formatRelativeTime, formatWeight } from '../../utils/helpers';
 import { CommentsList } from './CommentsList';
 
@@ -19,13 +22,28 @@ const Avatar = ({ src, name, size = 'h-11 w-11' }) =>
 export const FeedPostCard = ({ post }) => {
   const { user, userProfile } = useAuth();
   const [commentText, setCommentText] = useState('');
+  const [editData, setEditData] = useState({
+    description: post.description || '',
+    location: post.location || '',
+    city: post.city || '',
+    state: post.state || '',
+  });
+  const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const title = useMemo(() => getTitleById(post.equippedTitle), [post.equippedTitle]);
   const profilePath = post.uid === user?.uid ? '/profile' : `/profile/${post.uid}`;
+  const isOwner = post.uid === user?.uid;
   const hasLocation = post.location || post.city || post.state;
   const isGiant = Number(post.weight || 0) > 10;
   const isTrophy = Number(post.length || 0) > 100;
+
+  const updateEditField = (event) => {
+    const { name, value } = event.target;
+    setEditData((current) => ({ ...current, [name]: value }));
+  };
 
   const handleComment = async (event) => {
     event.preventDefault();
@@ -51,6 +69,44 @@ export const FeedPostCard = ({ post }) => {
     }
   };
 
+  const openEdit = () => {
+    setEditData({
+      description: post.description || '',
+      location: post.location || '',
+      city: post.city || '',
+      state: post.state || '',
+    });
+    setEditing(true);
+    setError('');
+  };
+
+  const handleEdit = async (event) => {
+    event.preventDefault();
+    try {
+      setSubmitting(true);
+      setError('');
+      await postService.updatePost(post.id, editData);
+      setEditing(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+      setError('');
+      await postService.deletePost(post.id);
+      setConfirmDelete(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <article className="overflow-hidden rounded-lg border border-blue-100 bg-white shadow-md transition hover:shadow-lg dark:border-slate-700 dark:bg-slate-900">
       <header className="flex items-start gap-3 p-4">
@@ -70,6 +126,26 @@ export const FeedPostCard = ({ post }) => {
             <span>{formatDateWithTime(post.createdAt)}</span>
           </p>
         </div>
+        {isOwner && (
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={openEdit}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition hover:bg-blue-50 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-800"
+              title="Editar postagem"
+            >
+              <FiEdit2 />
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              title="Deletar postagem"
+            >
+              <FiTrash2 />
+            </button>
+          </div>
+        )}
       </header>
 
       {post.imageURL ? (
@@ -138,6 +214,71 @@ export const FeedPostCard = ({ post }) => {
         </form>
         {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
       </div>
+
+      <Modal
+        isOpen={editing}
+        onClose={() => setEditing(false)}
+        title="Editar postagem"
+        actions={
+          <>
+            <Button type="button" variant="outline" onClick={() => setEditing(false)} disabled={submitting}>
+              Cancelar
+            </Button>
+            <Button type="submit" form={`edit-post-${post.id}`} loading={submitting}>
+              Salvar
+            </Button>
+          </>
+        }
+      >
+        <form id={`edit-post-${post.id}`} onSubmit={handleEdit} className="space-y-4">
+          <Textarea
+            label="Descricao"
+            name="description"
+            value={editData.description}
+            onChange={updateEditField}
+            placeholder="Conte os detalhes da captura."
+          />
+          <Input label="Local" name="location" value={editData.location} onChange={updateEditField} />
+          <Input label="Cidade" name="city" value={editData.city} onChange={updateEditField} />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Estado</label>
+            <select
+              name="state"
+              value={editData.state}
+              onChange={updateEditField}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">Selecione uma opcao</option>
+              {STATES.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-xs text-gray-500">Imagem, especie, peso e comprimento nao podem ser alterados.</p>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title="Deletar postagem"
+        actions={
+          <>
+            <Button type="button" variant="outline" onClick={() => setConfirmDelete(false)} disabled={deleting}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={handleDelete} loading={deleting}>
+              Deletar
+            </Button>
+          </>
+        }
+      >
+        <p className="text-gray-700">
+          Tem certeza que deseja deletar esta postagem? Os comentarios tambem serao removidos.
+        </p>
+      </Modal>
     </article>
   );
 };
