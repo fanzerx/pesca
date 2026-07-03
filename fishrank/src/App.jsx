@@ -4,12 +4,14 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import { HomePage } from './pages/HomePage';
+import { FeedPage } from './pages/FeedPage';
 import { LoginPage } from './pages/LoginPage';
 import { NewCapturePage } from './pages/NewCapturePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RankingPage } from './pages/RankingPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { SocialProfilePage } from './pages/SocialProfilePage';
 import { TitlesPage } from './pages/TitlesPage';
 
 const ProtectedRoute = ({ children }) => {
@@ -46,10 +48,12 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/home" element={protectedPage(<HomePage />)} />
+      <Route path="/feed" element={protectedPage(<FeedPage />)} />
       <Route path="/new-capture" element={protectedPage(<NewCapturePage />)} />
       <Route path="/ranking" element={protectedPage(<RankingPage />)} />
       <Route path="/achievements" element={protectedPage(<AchievementsPage />)} />
       <Route path="/profile" element={protectedPage(<ProfilePage />)} />
+      <Route path="/profile/:uid" element={protectedPage(<SocialProfilePage />)} />
       <Route path="/profile/edit" element={protectedPage(<EditProfilePage />)} />
       <Route path="/titles" element={protectedPage(<TitlesPage />)} />
       <Route path="*" element={<NotFoundPage />} />

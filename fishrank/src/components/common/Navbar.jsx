@@ -1,9 +1,10 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FiAward, FiHome, FiLogOut, FiPlus, FiTrendingUp, FiUser } from 'react-icons/fi';
+import { FiAward, FiHome, FiList, FiLogOut, FiPlus, FiTrendingUp, FiUser } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
 const items = [
   { icon: FiHome, label: 'Home', path: '/home' },
+  { icon: FiList, label: 'Feed', path: '/feed' },
   { icon: FiPlus, label: 'Nova', path: '/new-capture' },
   { icon: FiTrendingUp, label: 'Ranking', path: '/ranking' },
   { icon: FiAward, label: 'Conquistas', path: '/achievements' },
@@ -50,7 +51,7 @@ export const Navbar = () => {
       </aside>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-blue-100 bg-white md:hidden">
-        <div className="grid h-16 grid-cols-5">
+        <div className="grid h-16 grid-cols-6">
           {items.map(({ icon: Icon, label, path }) => (
             <NavLink
               key={path}

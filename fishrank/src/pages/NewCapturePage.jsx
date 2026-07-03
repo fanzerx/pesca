@@ -5,6 +5,7 @@ import { Button, Input, Select, Textarea, Toast } from '../components/common';
 import { FISH_SPECIES, STATES } from '../constants';
 import { useAuth } from '../context/AuthContext';
 import { captureService } from '../services/captureService';
+import { postService } from '../services/postService';
 import { progressionService } from '../services/progressionService';
 import { storageService } from '../services/storageService';
 
@@ -15,6 +16,7 @@ export const NewCapturePage = () => {
     weight: '',
     length: '',
     city: '',
+    state: '',
     location: '',
     description: '',
   });
@@ -24,7 +26,7 @@ export const NewCapturePage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -44,7 +46,8 @@ export const NewCapturePage = () => {
     if (!formData.species) return 'Escolha a espécie.';
     if (!formData.weight || Number(formData.weight) <= 0) return 'Informe um peso válido.';
     if (!formData.length || Number(formData.length) <= 0) return 'Informe um comprimento válido.';
-    if (!formData.city) return 'Informe a cidade ou estado.';
+    if (!formData.city.trim()) return 'Informe a cidade.';
+    if (!formData.state) return 'Informe o estado.';
     if (!formData.location.trim()) return 'Informe o local da captura.';
     return '';
   };
@@ -61,16 +64,33 @@ export const NewCapturePage = () => {
     try {
       setLoading(true);
       const photoURL = await storageService.uploadCapturePhoto(photoFile, user.uid);
-      await captureService.createCapture(user.uid, {
+      const createdAt = new Date();
+      const capture = await captureService.createCapture(user.uid, {
         ...formData,
         weight: Number(formData.weight),
         length: Number(formData.length),
         photoURL,
-        capturedAt: new Date(),
+        capturedAt: createdAt,
+      });
+      await postService.createPost({
+        uid: user.uid,
+        displayName: userProfile?.displayName || user.displayName || 'Usuario',
+        photoURL: userProfile?.photoURL || user.photoURL || '',
+        equippedTitle: userProfile?.equippedTitle || userProfile?.equipedTitle || 'fishing_beginner',
+        species: formData.species || formData.fishName,
+        weight: Number(formData.weight),
+        length: Number(formData.length),
+        location: formData.location,
+        city: formData.city,
+        state: formData.state,
+        description: formData.description,
+        imageURL: photoURL,
+        captureId: capture.id,
+        createdAt,
       });
       await progressionService.refreshUserProgress(user.uid);
-      setSuccess('Captura registrada e ranking atualizado.');
-      setTimeout(() => navigate('/home'), 900);
+      setSuccess('Captura registrada, ranking atualizado e publicada no Feed.');
+      setTimeout(() => navigate('/feed'), 900);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -111,10 +131,11 @@ export const NewCapturePage = () => {
             />
             <Input label="Peso (kg)" name="weight" type="number" step="0.1" value={formData.weight} onChange={updateField} />
             <Input label="Comprimento (cm)" name="length" type="number" step="0.1" value={formData.length} onChange={updateField} />
+            <Input label="Cidade" name="city" value={formData.city} onChange={updateField} placeholder="Ex: Manaus" />
             <Select
-              label="Cidade/UF"
-              name="city"
-              value={formData.city}
+              label="Estado"
+              name="state"
+              value={formData.state}
               onChange={updateField}
               options={STATES.map((state) => ({ value: state, label: state }))}
             />

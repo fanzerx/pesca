@@ -27,6 +27,25 @@ export const formatDateWithTime = (date) => {
   }).format(new Date(date));
 };
 
+export const formatRelativeTime = (date) => {
+  if (!date) return 'Agora mesmo';
+  const parsedDate = date?.toDate ? date.toDate() : new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return 'Agora mesmo';
+
+  const diffMs = Date.now() - parsedDate.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMinutes < 1) return 'Agora mesmo';
+  if (diffMinutes === 1) return '1 minuto atras';
+  if (diffMinutes < 60) return `${diffMinutes} minutos atras`;
+  if (diffHours === 1) return '1 hora atras';
+  if (diffHours < 24) return `${diffHours} horas atras`;
+  if (diffDays === 1) return 'Ontem';
+  return `${diffDays} dias atras`;
+};
+
 export const formatWeight = (weight) => {
   if (!weight) return '0 kg';
   return `${parseFloat(weight).toFixed(2)} kg`;
