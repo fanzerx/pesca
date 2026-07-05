@@ -10,6 +10,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  startAfter,
   updateDoc,
   where,
   writeBatch,
@@ -24,6 +25,18 @@ const mapPost = (postDoc) => ({
   id: postDoc.id,
   ...postDoc.data(),
 });
+
+const postsByCreatedAtQuery = (pageSize = 50, lastDoc = null) => {
+  const constraints = [orderBy('createdAt', 'desc'), limit(pageSize)];
+  if (lastDoc) constraints.splice(1, 0, startAfter(lastDoc));
+  return query(collection(db, POSTS_COLLECTION), ...constraints);
+};
+
+const userPostsQuery = (uid, pageSize = 50, lastDoc = null) => {
+  const constraints = [where('uid', '==', uid), orderBy('createdAt', 'desc'), limit(pageSize)];
+  if (lastDoc) constraints.splice(2, 0, startAfter(lastDoc));
+  return query(collection(db, POSTS_COLLECTION), ...constraints);
+};
 
 export const postService = {
   createPost: async (postData) => {
@@ -66,7 +79,7 @@ export const postService = {
 
   getPosts: async (pageSize = 50) => {
     try {
-      const q = query(collection(db, POSTS_COLLECTION), orderBy('createdAt', 'desc'), limit(pageSize));
+      const q = postsByCreatedAtQuery(pageSize);
       const snapshot = await getDocs(q);
       return snapshot.docs.map(mapPost);
     } catch (error) {
@@ -74,9 +87,21 @@ export const postService = {
     }
   },
 
-  getUserPosts: async (uid) => {
+  getFeed: async ({ pageSize = 50, lastDoc = null } = {}) => {
     try {
-      const q = query(collection(db, POSTS_COLLECTION), where('uid', '==', uid), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(postsByCreatedAtQuery(pageSize, lastDoc));
+      return {
+        posts: snapshot.docs.map(mapPost),
+        lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
+      };
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  getUserPosts: async (uid, { pageSize = 50, lastDoc = null } = {}) => {
+    try {
+      const q = userPostsQuery(uid, pageSize, lastDoc);
       const snapshot = await getDocs(q);
       return snapshot.docs.map(mapPost);
     } catch (error) {
@@ -85,7 +110,7 @@ export const postService = {
   },
 
   listenToPosts: (callback, onError, pageSize = 100) => {
-    const q = query(collection(db, POSTS_COLLECTION), orderBy('createdAt', 'desc'), limit(pageSize));
+    const q = postsByCreatedAtQuery(pageSize);
     return onSnapshot(
       q,
       (snapshot) => callback(snapshot.docs.map(mapPost)),
@@ -93,8 +118,8 @@ export const postService = {
     );
   },
 
-  listenToUserPosts: (uid, callback, onError) => {
-    const q = query(collection(db, POSTS_COLLECTION), where('uid', '==', uid), orderBy('createdAt', 'desc'));
+  listenToUserPosts: (uid, callback, onError, pageSize = 100) => {
+    const q = userPostsQuery(uid, pageSize);
     return onSnapshot(
       q,
       (snapshot) => callback(snapshot.docs.map(mapPost)),

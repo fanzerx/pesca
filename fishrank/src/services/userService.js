@@ -14,6 +14,21 @@ import {
 import { db } from "../firebase/config";
 
 const USERS_COLLECTION = 'users';
+const RANKING_FIELDS = {
+  captures: 'totalCaptures',
+  weight: 'totalWeight',
+  largest: 'largestFish',
+  species: 'totalSpecies',
+};
+
+const mapUser = (userDoc) => {
+  const data = userDoc.data();
+  return {
+    id: userDoc.id,
+    ...data,
+    equippedTitle: data.equippedTitle || data.equipedTitle || 'fishing_beginner',
+  };
+};
 
 export const userService = {
   createUserProfile: async (uid, userData) => {
@@ -100,14 +115,18 @@ export const userService = {
     try {
       const q = query(collection(db, USERS_COLLECTION), orderBy('totalCaptures', 'desc'), limit(100));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((userDoc) => {
-        const data = userDoc.data();
-        return {
-          id: userDoc.id,
-          ...data,
-          equippedTitle: data.equippedTitle || data.equipedTitle || 'fishing_beginner',
-        };
-      });
+      return querySnapshot.docs.map(mapUser);
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  getRanking: async (type = 'captures', pageSize = 100) => {
+    try {
+      const field = RANKING_FIELDS[type] || RANKING_FIELDS.captures;
+      const q = query(collection(db, USERS_COLLECTION), orderBy(field, 'desc'), limit(pageSize));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(mapUser);
     } catch (error) {
       throw new Error(error.message);
     }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState, Loading, Toast } from '../components/common';
 import { FeedFilters, PostCard } from '../components/feed';
-import { postService } from '../services/postService';
+import { feedService } from '../services/feedService';
 
 const toDate = (value) => {
   if (!value) return null;
@@ -32,7 +32,7 @@ export const FeedPage = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const unsubscribe = postService.listenToPosts(
+    const unsubscribe = feedService.listenToFeed(
       (items) => {
         setPosts(items);
         setLoading(false);

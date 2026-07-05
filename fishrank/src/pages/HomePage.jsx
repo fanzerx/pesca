@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiPlus } from 'react-icons/fi';
 import { Button, EmptyState, Loading, Toast } from '../components/common';
 import { PostCard } from '../components/feed';
-import { postService } from '../services/postService';
+import { feedService } from '../services/feedService';
 
 export const HomePage = () => {
   const [posts, setPosts] = useState([]);
@@ -12,7 +12,7 @@ export const HomePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = postService.listenToPosts(
+    const unsubscribe = feedService.listenToFeed(
       (items) => {
         setPosts(items);
         setLoading(false);

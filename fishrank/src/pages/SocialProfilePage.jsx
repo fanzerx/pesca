@@ -4,8 +4,8 @@ import { EmptyState, Loading, ProfileCard, Toast } from '../components/common';
 import { PostCard } from '../components/feed';
 import { getAchievementById } from '../constants/achievements';
 import { getTitleById } from '../constants/titles';
+import { feedService } from '../services/feedService';
 import { userService } from '../services/userService';
-import { postService } from '../services/postService';
 
 const ProfileBadges = ({ profile }) => {
   const achievements = (profile?.unlockedAchievements || []).map(getAchievementById).filter(Boolean);
@@ -61,7 +61,7 @@ export const SocialProfilePage = () => {
         setLoading(true);
         const userProfile = await userService.getUserProfile(uid);
         setProfile(userProfile);
-        unsubscribe = postService.listenToUserPosts(
+        unsubscribe = feedService.listenToUserPosts(
           uid,
           (items) => {
             setPosts(items);

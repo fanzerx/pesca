@@ -4,7 +4,7 @@ import { FiAward, FiEdit3 } from 'react-icons/fi';
 import { Button, EmptyState, Loading, ProfileCard, Toast } from '../components/common';
 import { PostCard } from '../components/feed';
 import { useAuth } from '../context/AuthContext';
-import { postService } from '../services/postService';
+import { feedService } from '../services/feedService';
 
 export const ProfilePage = () => {
   const { user, userProfile } = useAuth();
@@ -13,7 +13,7 @@ export const ProfilePage = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const unsubscribe = postService.listenToUserPosts(
+    const unsubscribe = feedService.listenToUserPosts(
       user.uid,
       (items) => {
         setPosts(items);

@@ -22,6 +22,9 @@ const mapComment = (commentDoc) => ({
   ...commentDoc.data(),
 });
 
+const postCommentsQuery = (postId) =>
+  query(collection(db, COMMENTS_COLLECTION), where('postId', '==', postId), orderBy('createdAt', 'asc'));
+
 export const commentService = {
   createComment: async (commentData) => {
     try {
@@ -47,18 +50,18 @@ export const commentService = {
 
   getPostComments: async (postId) => {
     try {
-      const q = query(collection(db, COMMENTS_COLLECTION), where('postId', '==', postId), orderBy('createdAt', 'asc'));
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(postCommentsQuery(postId));
       return snapshot.docs.map(mapComment);
     } catch (error) {
       throw new Error(error.message);
     }
   },
 
+  getComments: async (postId) => commentService.getPostComments(postId),
+
   listenToPostComments: (postId, callback, onError) => {
-    const q = query(collection(db, COMMENTS_COLLECTION), where('postId', '==', postId), orderBy('createdAt', 'asc'));
     return onSnapshot(
-      q,
+      postCommentsQuery(postId),
       (snapshot) => callback(snapshot.docs.map(mapComment)),
       (error) => onError?.(error)
     );
