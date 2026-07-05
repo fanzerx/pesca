@@ -1,23 +1,27 @@
 import {
-  collection,
-  doc,
   addDoc,
+  collection,
+  deleteDoc,
+  doc,
   getDoc,
   getDocs,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
   limit,
+  orderBy,
+  query,
   startAfter,
+  updateDoc,
+  where,
 } from 'firebase/firestore';
-import { db } from "../firebase/config";
+import { db } from '../firebase/config';
 
 const CAPTURES_COLLECTION = 'captures';
 
+const mapCapture = (captureDoc) => ({
+  id: captureDoc.id,
+  ...captureDoc.data(),
+});
+
 export const captureService = {
-  // Criar nova captura
   createCapture: async (uid, captureData) => {
     try {
       const capturesRef = collection(db, CAPTURES_COLLECTION);
@@ -35,82 +39,45 @@ export const captureService = {
     }
   },
 
-  // Obter captura por ID
   getCaptureById: async (captureId) => {
     try {
       const captureRef = doc(db, CAPTURES_COLLECTION, captureId);
       const captureDoc = await getDoc(captureRef);
-      if (captureDoc.exists()) {
-        return { id: captureDoc.id, ...captureDoc.data() };
-      }
-      return null;
+      return captureDoc.exists() ? mapCapture(captureDoc) : null;
     } catch (error) {
       throw new Error(error.message);
     }
   },
 
-  // Obter capturas do usuário
   getUserCaptures: async (uid) => {
     try {
-      const q = query(
-        collection(db, CAPTURES_COLLECTION),
-        where('uid', '==', uid),
-        orderBy('createdAt', 'desc')
-      );
+      const q = query(collection(db, CAPTURES_COLLECTION), where('uid', '==', uid), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      return querySnapshot.docs.map(mapCapture);
     } catch (error) {
       throw new Error(error.message);
     }
   },
 
-  // Obter ultimas capturas (para home)
   getLatestCaptures: async (pageSize = 10) => {
     try {
-      const q = query(
-        collection(db, CAPTURES_COLLECTION),
-        orderBy('createdAt', 'desc'),
-        limit(pageSize)
-      );
+      const q = query(collection(db, CAPTURES_COLLECTION), orderBy('createdAt', 'desc'), limit(pageSize));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      return querySnapshot.docs.map(mapCapture);
     } catch (error) {
       throw new Error(error.message);
     }
   },
 
-  // Paginar capturas
   getPaginatedCaptures: async (pageSize = 10, lastDoc = null) => {
     try {
-      let q;
-      if (lastDoc) {
-        q = query(
-          collection(db, CAPTURES_COLLECTION),
-          orderBy('createdAt', 'desc'),
-          startAfter(lastDoc),
-          limit(pageSize)
-        );
-      } else {
-        q = query(
-          collection(db, CAPTURES_COLLECTION),
-          orderBy('createdAt', 'desc'),
-          limit(pageSize)
-        );
-      }
+      const q = lastDoc
+        ? query(collection(db, CAPTURES_COLLECTION), orderBy('createdAt', 'desc'), startAfter(lastDoc), limit(pageSize))
+        : query(collection(db, CAPTURES_COLLECTION), orderBy('createdAt', 'desc'), limit(pageSize));
       const querySnapshot = await getDocs(q);
-      const captures = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      
+
       return {
-        captures,
+        captures: querySnapshot.docs.map(mapCapture),
         lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
       };
     } catch (error) {
@@ -118,7 +85,6 @@ export const captureService = {
     }
   },
 
-  // Atualizar captura
   updateCapture: async (captureId, data) => {
     try {
       const captureRef = doc(db, CAPTURES_COLLECTION, captureId);
@@ -131,23 +97,20 @@ export const captureService = {
     }
   },
 
-  // Deletar captura
   deleteCapture: async (captureId) => {
     try {
-      const captureRef = doc(db, CAPTURES_COLLECTION, captureId);
-      await deleteDoc(captureRef);
+      await deleteDoc(doc(db, CAPTURES_COLLECTION, captureId));
     } catch (error) {
       throw new Error(error.message);
     }
   },
 
-  // Incrementar likes
   incrementLikes: async (captureId) => {
     try {
       const captureRef = doc(db, CAPTURES_COLLECTION, captureId);
       const captureDoc = await getDoc(captureRef);
       const currentLikes = captureDoc.data().likes || 0;
-      
+
       await updateDoc(captureRef, {
         likes: currentLikes + 1,
       });
@@ -156,13 +119,12 @@ export const captureService = {
     }
   },
 
-  // Decrementar likes
   decrementLikes: async (captureId) => {
     try {
       const captureRef = doc(db, CAPTURES_COLLECTION, captureId);
       const captureDoc = await getDoc(captureRef);
       const currentLikes = captureDoc.data().likes || 0;
-      
+
       if (currentLikes > 0) {
         await updateDoc(captureRef, {
           likes: currentLikes - 1,
@@ -173,59 +135,11 @@ export const captureService = {
     }
   },
 
-  // Obter capturas por espécie
   getCapturesBySpecies: async (species) => {
     try {
-      const q = query(
-        collection(db, CAPTURES_COLLECTION),
-        where('species', '==', species),
-        orderBy('createdAt', 'desc')
-      );
+      const q = query(collection(db, CAPTURES_COLLECTION), where('species', '==', species), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  },
-
-  // Obter capturas por localização
-  getCapturesByLocation: async (location) => {
-    try {
-      const q = query(
-        collection(db, CAPTURES_COLLECTION),
-        where('location', '==', location),
-        orderBy('createdAt', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  },
-
-  // Obter maior peixe de um usuário
-  getLargestFishByUser: async (uid) => {
-    try {
-      const q = query(
-        collection(db, CAPTURES_COLLECTION),
-        where('uid', '==', uid),
-        orderBy('weight', 'desc'),
-        limit(1)
-      );
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        return {
-          id: querySnapshot.docs[0].id,
-          ...querySnapshot.docs[0].data(),
-        };
-      }
-      return null;
+      return querySnapshot.docs.map(mapCapture);
     } catch (error) {
       throw new Error(error.message);
     }
