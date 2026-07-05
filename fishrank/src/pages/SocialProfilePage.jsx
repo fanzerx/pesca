@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { EmptyState, Loading, ProfileCard, Toast } from '../components/common';
-import { FeedPostCard } from '../components/feed';
+import { PostCard } from '../components/feed';
 import { getAchievementById } from '../constants/achievements';
 import { getTitleById } from '../constants/titles';
 import { userService } from '../services/userService';
@@ -103,7 +103,7 @@ export const SocialProfilePage = () => {
               ) : (
                 <div className="mx-auto max-w-3xl space-y-5">
                   {posts.map((post) => (
-                    <FeedPostCard key={post.id} post={post} />
+                    <PostCard key={post.id} post={post} />
                   ))}
                 </div>
               )}

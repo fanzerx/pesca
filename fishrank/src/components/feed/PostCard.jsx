@@ -19,7 +19,7 @@ const Avatar = ({ src, name, size = 'h-11 w-11' }) =>
     </div>
   );
 
-export const FeedPostCard = ({ post }) => {
+export const PostCard = ({ post }) => {
   const { user, userProfile } = useAuth();
   const [commentText, setCommentText] = useState('');
   const [editData, setEditData] = useState({
@@ -127,22 +127,24 @@ export const FeedPostCard = ({ post }) => {
           </p>
         </div>
         {isOwner && (
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row">
             <button
               type="button"
               onClick={openEdit}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition hover:bg-blue-50 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-800"
-              title="Editar postagem"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-gray-600 transition hover:bg-blue-50 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-800"
+              title="Editar publicacao"
             >
               <FiEdit2 />
+              <span>Editar</span>
             </button>
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-slate-800"
-              title="Deletar postagem"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-gray-600 transition hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              title="Excluir publicacao"
             >
               <FiTrash2 />
+              <span>Excluir</span>
             </button>
           </div>
         )}
@@ -218,7 +220,7 @@ export const FeedPostCard = ({ post }) => {
       <Modal
         isOpen={editing}
         onClose={() => setEditing(false)}
-        title="Editar postagem"
+        title="Editar publicacao"
         actions={
           <>
             <Button type="button" variant="outline" onClick={() => setEditing(false)} disabled={submitting}>
@@ -263,21 +265,19 @@ export const FeedPostCard = ({ post }) => {
       <Modal
         isOpen={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        title="Deletar postagem"
+        title="Excluir publicacao"
         actions={
           <>
             <Button type="button" variant="outline" onClick={() => setConfirmDelete(false)} disabled={deleting}>
               Cancelar
             </Button>
             <Button type="button" onClick={handleDelete} loading={deleting}>
-              Deletar
+              Excluir
             </Button>
           </>
         }
       >
-        <p className="text-gray-700">
-          Tem certeza que deseja deletar esta postagem? Os comentarios tambem serao removidos.
-        </p>
+        <p className="text-gray-700">Tem certeza que deseja excluir esta publicação?</p>
       </Modal>
     </article>
   );

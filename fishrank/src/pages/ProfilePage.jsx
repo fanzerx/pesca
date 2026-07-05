@@ -1,28 +1,31 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiAward, FiEdit3 } from 'react-icons/fi';
-import { Button, CaptureCard, EmptyState, Loading, ProfileCard, Toast } from '../components/common';
+import { Button, EmptyState, Loading, ProfileCard, Toast } from '../components/common';
+import { PostCard } from '../components/feed';
 import { useAuth } from '../context/AuthContext';
-import { captureService } from '../services/captureService';
+import { postService } from '../services/postService';
 
 export const ProfilePage = () => {
   const { user, userProfile } = useAuth();
-  const [captures, setCaptures] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setCaptures(await captureService.getUserCaptures(user.uid));
-      } catch (err) {
+    const unsubscribe = postService.listenToUserPosts(
+      user.uid,
+      (items) => {
+        setPosts(items);
+        setLoading(false);
+      },
+      (err) => {
         setError(err.message);
-      } finally {
         setLoading(false);
       }
-    };
-    load();
+    );
+
+    return () => unsubscribe();
   }, [user.uid]);
 
   return (
@@ -32,7 +35,7 @@ export const ProfilePage = () => {
           <Link to="/titles">
             <Button variant="outline">
               <FiAward />
-              Escolher título
+              Escolher titulo
             </Button>
           </Link>
           <Link to="/profile/edit">
@@ -49,12 +52,12 @@ export const ProfilePage = () => {
           <h2 className="mb-4 text-2xl font-black text-primary">Capturas</h2>
           {loading ? (
             <Loading />
-          ) : captures.length === 0 ? (
-            <EmptyState icon="🎣" title="Sem capturas" message="Suas capturas aparecerão aqui." />
+          ) : posts.length === 0 ? (
+            <EmptyState icon="🎣" title="Sem capturas" message="Suas capturas aparecerao aqui." />
           ) : (
-            <div className="space-y-5">
-              {captures.map((capture) => (
-                <CaptureCard key={capture.id} capture={capture} userProfile={userProfile} />
+            <div className="mx-auto max-w-3xl space-y-5">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
               ))}
             </div>
           )}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState, Loading, Toast } from '../components/common';
-import { FeedFilters, FeedPostCard } from '../components/feed';
+import { FeedFilters, PostCard } from '../components/feed';
 import { postService } from '../services/postService';
 
 const toDate = (value) => {
@@ -114,7 +114,7 @@ export const FeedPage = () => {
         ) : (
           <div className="space-y-5">
             {filteredPosts.map((post) => (
-              <FeedPostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} />
             ))}
           </div>
         )}
